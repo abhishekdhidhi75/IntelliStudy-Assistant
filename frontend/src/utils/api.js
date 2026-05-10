@@ -1,4 +1,4 @@
-const BASE = '/api';
+const BASE = import.meta.env.VITE_API_BASE_URL || (window.location.hostname === 'localhost' ? '/api' : 'https://intellistudy-assistant.onrender.com');
 
 export const api = {
   async upload(file, subject) {
