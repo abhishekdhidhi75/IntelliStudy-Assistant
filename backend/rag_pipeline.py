@@ -8,7 +8,8 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
+# Removed sentence-transformers to save RAM
+
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -18,7 +19,9 @@ class RAGPipeline:
     def __init__(self):
         print("Initializing RAG Pipeline...")
         # 1. Load Embedder
-        self.embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        # 1. Using Gemini Embeddings instead of local SentenceTransformer
+        self.embed_model = "models/embedding-001"
+
         
         # 2. Setup ChromaDB
         self.db_path = "./chroma_db"
@@ -66,13 +69,9 @@ class RAGPipeline:
     def _warmup(self):
         print("Warming up models...")
         try:
-            self.embedder.encode(["warmup"])
-            count = self.collection.count()
-            if count > 0:
-                self.collection.query(
-                    query_embeddings=self.embedder.encode(["warmup"]).tolist(),
-                    n_results=1
-                )
+            # Warmup with Gemini embedding call
+            genai.embed_content(model=self.embed_model, content="warmup", task_type="retrieval_document")
+
             print("Warmup complete")
         except Exception as e:
             print(f"Warmup failed: {e}")
@@ -134,7 +133,10 @@ class RAGPipeline:
         if not chunks: return {"chunks": 0}
             
         try:
-            embeddings = self.embedder.encode(chunks).tolist()
+            # Get embeddings from Gemini
+            emb_res = genai.embed_content(model=self.embed_model, content=chunks, task_type="retrieval_document")
+            embeddings = emb_res['embedding']
+
             ids = [f"{file_id}_{i}" for i in range(len(chunks))]
             metadatas = [{
                 "file_id": file_id,
@@ -159,7 +161,10 @@ class RAGPipeline:
             return {"chunks": 0, "error": str(e)}
 
     def _retrieve(self, query: str, subject: Optional[str] = None, k: int = 5) -> List[Dict]:
-        query_embedding = self.embedder.encode([query]).tolist()
+        # Get query embedding from Gemini
+        emb_res = genai.embed_content(model=self.embed_model, content=query, task_type="retrieval_query")
+        query_embedding = [emb_res['embedding']]
+
         where = {"subject": subject} if subject and subject != "All Subjects" else None
         results = self.collection.query(query_embeddings=query_embedding, n_results=k, where=where)
         

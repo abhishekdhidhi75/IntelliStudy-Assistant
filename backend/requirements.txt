@@ -2,7 +2,6 @@ fastapi
 uvicorn
 google-generativeai
 chromadb
-sentence-transformers
 pdfplumber
 python-docx
 python-dotenv
