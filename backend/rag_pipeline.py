@@ -35,7 +35,7 @@ class RAGPipeline:
         
         # Get or create collection with cosine similarity
         self.collection = self.chroma_client.get_or_create_collection(
-            name="study_docs",
+            name="study_docs_v2",
             metadata={"hnsw:space": "cosine"}
         )
         
