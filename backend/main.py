@@ -17,9 +17,10 @@ rag = RAGPipeline()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Warmup
-    rag._warmup()
+    # Startup: Immediate
+    print("Server starting...")
     yield
+
     # Shutdown
     pass
 
@@ -240,4 +241,7 @@ async def growth_insight(request: GrowthInsightRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Use the PORT environment variable if it exists (for Render)
+    port = int(os.environ.get("PORT", 10000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
+
