@@ -20,7 +20,7 @@ class RAGPipeline:
         print("Initializing RAG Pipeline...")
         # 1. Load Embedder
         # 1. Using Gemini Embeddings instead of local SentenceTransformer
-        self.embed_model = "models/embedding-001"
+        self.embed_model = "models/gemini-embedding-001"
 
         
         # 2. Setup ChromaDB
