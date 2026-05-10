@@ -89,14 +89,19 @@ async def upload_file(file: UploadFile = File(...), subject: str = Form("General
     temp_dir = "./temp_uploads"
     if not os.path.exists(temp_dir): os.makedirs(temp_dir)
     
+    print(f"DEBUG: Received file {file.filename}")
     file_path = os.path.join(temp_dir, f"{file_id}_{file.filename}")
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
+    print(f"DEBUG: File saved to {file_path}")
     
     try:
+        print("DEBUG: Starting ingestion...")
         stats = rag.ingest(file_path, file.filename, subject, file_id)
+        print(f"DEBUG: Ingestion finished. Stats: {stats}")
         os.remove(file_path)
         if stats.get("error"):
+            print(f"DEBUG: Ingestion Error: {stats['error']}")
             return {"status": "error", "message": stats["error"], "chunks": 0}
         return {
             "file_id": file_id, "filename": file.filename, "subject": subject,
@@ -242,6 +247,6 @@ async def growth_insight(request: GrowthInsightRequest):
 if __name__ == "__main__":
     import uvicorn
     # Use the PORT environment variable if it exists (for Render)
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
 
